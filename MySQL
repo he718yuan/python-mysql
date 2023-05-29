@@ -1,0 +1,1434 @@
+第一章 数据库概述
+
+1.为什么要使用数据库
+
+	持久化：把数据保存到可掉电式存储设备中以供之后使用。数据持久化意味着将内存中的数据保存到硬盘上加以”固化”。
+	持久化的主要作用：将内存中的数据存储在关系型数据库中
+2.数据库与数据库管理系统
+
+概念：数据库（DB）即存储数据的“仓库”，其本质是一个文件系统。它保存了一系列有组织的数据。
+	 数据库管理系统（DBMS）是一种操纵和管理数据库的大型软件，用于建立、使用和维护数据库，对数据库进行统一管理和控制。用户通过数据库管理系统访问数据库中表内的数据。
+	 结构化查询语言（SQL）专门用来与数据库通信的语言。
+关系：DBS = (DB + DBMS)
+
+3.关系型数据库（rdbms）和非关系型数据库（非rdbms）
+关系型数据库把复杂的数据结构归结为简单的二元关系（即二维表格形式），以行(row)和列(column)的形式存储数据，优势是复杂查询可以用SQL语句方便	的在一个表以及多个表之间做非常复杂的数据查询；事务支持使得对于安全性能很高的数据访问要求得以实现。
+非关系型数据库包括：键值型数据库（Redis）、文档型数据库（MongoDB）、搜索引擎数据库、列式数据库（HBASE）、图形数据库
+
+加载到内存中的无用字段越多，内存占用越高
+
+ORM思想(ObjectRelationalMapping)体现：
+	数据库中的一个表 <---> Java或Python中的一个类
+	表中的一条数据 <---> 类中的一个对象（或实体）
+	表中的一个列 <----> 类中的一个字段、属性(field)
+
+
+第二章 MySQL环境搭建
+
+MySQL的安装和卸载（详情见博客）
+
+MySQL服务的启动与停止：
+	1.百度搜索
+	2.使用命令行（在管理员身份下运行，否则权限不够）
+		# 启动MySQL服务命令：
+		net start MySQL服务名
+		# 停止MySQL服务命令：
+		net stop MySQL服务名
+
+MySQL登录：
+	使用自带客户端
+	使用Windows命令行：mysql -u root -p
+		若电脑上装有两个MySQL，可通过指定端口号进行登录或者改环境变量的优先级（mysql -u root -P(端口号) -p）
+		若想连接另外一台主机上的服务器，mysql -u root -P 3306 -h（主机名） -p
+	退出使用命令：quit
+	查看mysql版本：MySQL --version
+
+MySQL的简单使用:
+	1.查看所有的数据库
+		show databases;
+	2.创建数据库
+		create database 数据库名;
+	3.使用数据库
+		use 数据库名;
+	4.查看某个数据库下所有的表
+		show tables from 数据库名；
+	5.创建新表
+		createtable表名称(
+			字段名	数据类型,
+			字段名	数据类型
+			);
+	6.查看一个表的数据
+		select * from 数据库表名称;
+	7.添加一条记录(MySQL8.0版本可以直接添加中文，而5.5版本则会报错)
+		insert into 表名 values(值列表);
+	8.查看表的创建信息
+		show create table 表名称\G
+	9.查看数据库的创建信息
+		show create database 数据库名称\G
+	10.删除表格
+		drop table 表名称;
+	11.删除数据库
+		drop database 数据库名称;
+
+MySQL的编码问题：
+	5.7中，命令行操作出现SQL乱码问题，通过命令
+	show variables like 'character_%';
+	show variables like 'collation_%';查看编码
+	再修改MySQL下my.ini配置文件
+	default-character-set=utf8
+	character-set-server=utf8
+	collation-server=utf8_general_ci
+	最后重启MySQL服务，再次查看编码，发生变化表示配置成功；
+	8.0版本则已经适配，不需要修改。
+
+
+第三章 基本的select语句
+
+1.SQL的分类
+DDL:数据定义语言。CREATE\ALTER\DROP\RENAME\TRUNCAT
+DML:数据操作语言。INSERT\DELETE\UPDATE\SELECT
+DCL:数据控制语言。COMMIT\ROLLBACK\SAVEPOINT\GRANT\REVOKE
+
+2.SQL语言的规则与规范
+规则是必须要遵守的:
+	SQL可以写在一行或者多行。为了提高可读性，各子句分行写，必要时使用缩进;
+	每条命令以;或\g或\G结束;
+	关键字不能被缩写也不能分行;
+	关于标点符号
+		必须保证所有的()、单引号、双引号是成对结束的
+		必须使用英文状态下的半角输入方式
+		字符串型和日期时间类型的数据可以使用单引号（''）表示
+		列的别名，尽量使用双引号（""），而且不建议省略as
+建议规范使用：
+	MySQL在Windows环境下是大小写不敏感的；
+	MySQL在Linux环境下是大小写敏感的；
+		数据库名、表名、表的别名、变量名是严格区分大小写的；
+		关键字、函数名、列名(或字段名)、列的别名(字段的别名)是忽略大小写的。
+	推荐采用统一的书写规范：
+		数据库名、表名、表别名、字段名、字段别名等都小写；
+		SQL关键字、函数名、绑定变量等都大写。
+
+3.MySQL的三种注释方式
+单行注释：#注释文字(MySQL特有的方式)
+单行注释：--注释文字(--后面必须包含一个空格。)
+多行注释：/*注释文字*/
+
+4.导入现有的数据表、表的数据
+方式一：source 文件的全路径名
+方式二：基于具体的图形化界面的工具可以导入数据
+
+5.最基本的select语句：select 字段1，字段2，…… from 表名（其中要想查询所有字段可以使用 * ）
+特殊：select 1+1,3*2 (from dual;) # dual:伪表
+
+6.列的别名
+as,全称Alisa(别名)，可以省略；列的别名可以使用一对""引起来，不要使用''
+SELECT employee_id emp_id,last_name as lname,department_id "部门id" FROM employees;
+
+7.去除重复行
+SELECT DISTINCT department_id FROM employees;(distinct关键字)
+当去重出现两个字段时，它会为每一个字段都去重，这样取出来的数据没有意义。
+
+8.空值参与运算(null)
+null不等同于0，'','null'
+空值参与运算的解决方案：引入ifnull
+SELECT employee_id,salary "月工资",salary * (1 + IFNULL(commission_pct,0)) * 12 "年工资" from employees;
+
+9.着重号``
+当表名与关键字重名时，需使用着重号``来区分表名和关键字
+SELECT * from `order`;
+
+10.查询常数
+select '信息学院',123, employee_id,last_name from employees
+
+11.显示表结构
+DESCRIBE employees;或DESC employees;
+显示表中字段的详细信息
+
+12.过滤数据(where 关键字)
+SELECT * from employees WHERE department_id = 90;
+SELECT * from employees where last_name = 'king';
+
+
+第四章 运算符
+
+1.算术运算符：+	-	*	/(div)	%(mod)
+	# 在SQL中，+没有连接作用，就表示加法运算，此时会将字符串转换为数值（隐式转换）
+	select 100 + '1'	# 在Java语言中，结果是1001
+	select 100 + 'a'	# 此时将'a'看做0处理
+	select 100 + NULL	# NULL值参与运算结果为null
+	select 100 div 0 	# 分母如果为0，则结果为null
+	select employee_id,last_name,salary from employees where employee_id % 2 = 0;
+
+2.比较运算符
+
+2.1 = <=> <> != < <= > <=
+	= 的使用
+	select 1 = 'a',0 = 'a'	# 返回0,1。字符串存在隐式转换。如果转换数值不成功，则看做0
+	select 'a' = 'b'	# 两边都是字符串的话，则按照ansi的比较规则进行比较
+	# 只要有null参与判断，结果就是null
+
+	<=> :安全等于号
+	可以对null进行判断，为null而生
+
+2.2 IS NULL / IS NOT NULL / ISNULL
+	select id from dual where c_id is null
+	或 select id from dual where isnull(c_id)
+
+2.3 LEAST() \ GREATEST()
+	select least('g','b','k'),greatest('g','b','k')
+
+2.4 between 条件一 and 条件二
+	SELECT employee_id,last_name,salary from employees where salary BETWEEN 6000 and 8000;（包含边界值）
+
+2.5 in (set) \ not in (set)
+	SELECT last_name,salary,department_id from employees WHERE department_id in (10,20,30)
+
+2.6 like:模糊查询
+	SELECT last_name FROM employees WHERE last_name LIKE '%a%';		# % ：代表不确定个数的字符（0,1，多个）
+	ELECT last_name FROM employees WHERE last_name LIKE '_a%';		# _ ：代表一个不确定的字符
+	# \ ：转义字符
+
+2.7 regexp \ rlike ：正则表达式
+	select 'Hyun' regexp '^H', 'Hyun' regexp 'H$', 'Hyun' regexp 'Hy'
+
+3.逻辑运算符：or || and && not ! xor
+	注意：and的优先级高于or
+
+4.位运算符：& | ^ ~ >> <<
+	在一定范围内满足：每向左移动1位，相当于乘以2；每向右移动一位，相当于除以2.	
+
+
+第五章 排序与分页
+
+1.排序
+如果没有使用排序操作，默认情况下查询返回的数据是按照添加数据的顺序显示的。
+SELECT * FROM employees ORDER BY salary DESC;	# 如果在order by 后没有显示指明排序的方式的话，则默认按照升序排列
+我们可以使用列的别名进行排序。
+列的别名只能在order by中使用，不能在where中使用。
+注意格式：where需要声明在from后，order by 之前。
+二级排序：
+	select employee_id,salary,department_id from employees order by department_id desc,salary asc;
+
+2.分页
+
+2.1 mysql使用limit实现数据的分页显示
+	limit的格式：limit 位置偏移量，条目数（而limit 0，条目数  等价于 limit 条目数）
+	要求每页显示pageSize条数据，此时显示第pageNo页：（公式）
+	limit （pageNo-1）* pageSize，pageSize;
+2.2 where ... order by ... limit 声明顺序如下：
+	SELECT employee_id,last_name,salary from employees WHERE salary>6000 ORDER BY salary DESC LIMIT 0,10;
+
+2.3 MySQL8.0新特性:limit ... offset ...
+	SELECT employee_id,last_name from employees limit 2 offset 31;		#显示第32、33条数据
+
+2.4 limit可以使用在MySQL、pgsql、MariaDB、SQLite等数据库中使用，表示分页；不能在SQL Server、DB2、Oracle！ 
+
+
+第六章 多表查询
+
+1.出现笛卡尔积（或交叉连接）的错误（错误原因：缺少了多表的连接条件）
+错误的实现方式：每个员工都与每个部门匹配了一遍。
+	SELECT employee_id,department_name from employees,departments;		# 查询出了2889条记录
+
+2.多表查询的正确方式：需要有连接条件
+	SELECT employee_id,department_name 
+	from employees,departments
+	# 两个表的连接条件
+	WHERE employees.department_id = departments.department_id;
+
+3.如果查询语句中出现了多个表中都存在的字段，则必须指明此字段所在的表
+	SELECT employee_id,department_name,employees.department_id
+	from employees,departments
+	WHERE employees.department_id = departments.department_id;
+
+建议：从SQL优化的角度，建议多表查询时，每个字段前都指明其所在的表。
+
+4.可以给表起别名，在select和where中使用表的别名.(当起了别名时，后面指明的字段前缀必须使用别名前缀，而不能使用表的原名)
+	SELECT emp.employee_id,dept.department_name,emp.department_id
+	from employees emp,departments dept
+	WHERE emp.department_id = dept.department_id;
+
+5.如果有N个表实现多表的查询，则需要至少N-1个连接条件
+练习:查询员工的emploee_id,last_name,department_name,city
+	SELECT employee_id,last_name,dept.department_name,lts.city
+	FROM employees emp,departments dept,locations lts
+	WHERE emp.department_id = dept.department_id and dept.location_id = lts.location_id;
+
+6.多表查询的分类
+角度1：等值连接 VS 非等值连接
+	前面的都是等值连接
+	一个非等值连接的例子：
+		SELECT last_name,salary,grade_level
+		FROM employees e,job_grades j
+		WHERE e.salary BETWEEN j.lowest_sal AND j.highest_sal;
+角度2：自连接 VS 非自连接
+	自连接例子：
+	查询员工id，员工姓名及管理者的id和姓名
+	SELECT emp.employee_id,emp.last_name,mgr.employee_id,mgr.last_name
+	FROM employees emp,employees mgr
+	WHERE emp.manager_id = mgr.employee_id;
+角度3：内连接 VS 外连接
+	内连接：合并具有同一列的两个以上的表的行，结果集中不包含一个表和另一个表不匹配的行
+	外连接：合并具有同一列的两个以上的表的行，结果集中除了包含一个表和另一个表匹配的行之外，还查询到了左表或右表中不匹配的行
+		外连接的分类：左外连接、右外连接、满外连接
+		左外连接：两个表在连接过程中除了返回满足连接条件的行以外还返回左表中不满足条件的行
+		右外连接：两个表在连接过程中除了返回满足连接条件的行以外还返回右表中不满足条件的行
+	
+	练习：查询所有员工的last_name,department_name信息
+		SELECT last_name,department_name
+		from employees,departments
+		WHERE employees.department_id = departments.department_id;
+
+	SQL92语法实现内连接：见上，略
+	SQL92语法实现外连接：使用 + (MySQL不支持SQL92语法中外连接的写法！)
+		SELECT employee_id,department_name
+		from employees,departments
+		WHERE employees.department_id = departments.department_id(+);
+
+	SQL99语法中使用join ... on 的方式实现多表查询。这种方式也能解决外连接的问题。MySQL是支持此种方式的。
+
+	SQL99语法如何实现多表的查询。
+	SQL99语法实现内连接：
+		select last_name,department_name(,city)
+		from employees e inner join departments d
+		on e.department_id = d.department_id
+		(join locations l
+				on d.location_id = l.location_id;)
+	SQL99语法实现外连接：
+	练习：查询所有员工的last_name,department_name信息
+	左外连接：
+		SELECT last_name,department_name
+		from employees e left (outer) join departments d
+		WHERE e.department_id = d.department_id;
+	右外连接：
+		SELECT last_name,department_name
+		from employees e right (outer) join departments d
+		WHERE e.department_id = d.department_id;
+	满外连接：（全外连接）MySQL不支持full outer join
+		SELECT last_name,department_name
+		from employees e full outer join departments d
+		WHERE e.department_id = d.department_id;
+
+7.union 和 union all的使用
+union：会执行去重操作
+union all：不会执行去重操作
+结论：如果明确知道合并数据后的结果数据不存在重复数据，或者不需要去除重复数据，则尽量使用union all语句，以提高数据查询的效率。
+
+8.7种join的实现：
+图见该文件路径下的  7种join的实现  
+中图：内连接
+	select employee_id,department_name
+	from employees e join departments d
+	on e.department_id = d.department_id;
+左上图：左外连接
+	select employee_id,department_name
+	from employees e left join departments d
+	on e.department_id = d.department_id;
+右上图：右外连接
+	select employee_id,department_name
+	from employees e right join departments d
+	on e.department_id = d.department_id;
+左中图：
+	select employee_id,department_name
+	from employees e left join departments d
+	on e.department_id = d.department_id;
+	where d.department_id is null;
+右中图：
+	select employee_id,department_name
+	from employees e right join departments d
+	on e.department_id = d.department_id;
+	where e.department_id is null;
+左下图：满外连接
+方式1：左上图 union all 右中图
+	select employee_id,department_name
+	from employees e left join departments d
+	on e.department_id = d.department_id
+	union all
+	select employee_id,department_name
+	from employees e right join departments d
+	on e.department_id = d.department_id;
+	where e.department_id is null;
+方式2：左中图 union all右上图
+	select employee_id,department_name
+	from employees e left join departments d
+	on e.department_id = d.department_id;
+	where d.department_id is null
+	union all
+	select employee_id,department_name
+	from employees e right join departments d
+	on e.department_id = d.department_id;
+右下图：左中图 union all 右中图
+	select employee_id,department_name
+	from employees e left join departments d
+	on e.department_id = d.department_id
+	where d.department_id is null
+	union all
+	select employee_id,department_name
+	from employees e right join departments d
+	on e.department_id = d.department_id
+	where e.department_id is null;
+
+9.SQL99语法的新特性1：自然连接
+	SELECT employee_id,last_name,department_name
+	from employees e join departments d
+	on e.department_id = d.department_id and e.manager_id = d.manager_id
+	
+	natural join：它会帮你自动查询两张连接表中所有相同的字段，然后进行等值连接。
+	SELECT employee_id,last_name,department_name
+	from employees e natural join departments d；
+
+10.SQL99语法的新特性2：using
+	select employee_id,last_name,department_name
+	from employees e join departments d
+	on e.department_id = d.department_id;
+
+	select employee_id,last_name,department_name
+	from employees e join departments d
+	using (department_id);
+
+
+第七章 单行函数
+
+1.数值函数
+# 自运行即可
+# 基本的操作
+SELECT
+ABS(-123),ABS(32),SIGN(-23),SIGN(43),PI(),CEIL(32.32),CEILING(-43.23),FLOOR(32.32),FLOOR(-43.23),MOD(12,5)
+FROM DUAL;
+
+# 取随机数
+SELECT RAND(),RAND(),RAND(10),RAND(10),RAND(-1),RAND(-1)
+FROM DUAL;		# 括号里面的是随机种子
+
+# 四舍五入，截断操作
+SELECT ROUND(123.556),ROUND(123.456,0),ROUND(123.456,1),ROUND(123.456,2),ROUND(123.456,-1),ROUND(153.456,-2)
+FROM DUAL;
+
+SELECT TRUNCATE(123.456,0),TRUNCATE(123.496,1),TRUNCATE(129.45,-1)
+FROM DUAL;
+
+# 单行函数可以嵌套
+SELECT TRUNCATE(ROUND(123.456,2),0)
+FROM DUAL;
+
+# 角度与弧度的互换
+SELECT RADIANS(30),RADIANS(45),RADIANS(60),RADIANS(90),
+DEGREES(2*PI()),DEGREES(RADIANS(60))
+FROM DUAL;
+
+# 三角函数
+SELECT SIN(RADIANS(30)),DEGREES(ASIN(1)),TAN(RADIANS(45)),DEGREES(ATAN(1))
+FROM DUAL;
+
+# 指数和对数
+SELECT POW(2,5),POWER(2,4),EXP(2)
+from DUAL;
+
+SELECT LN(EXP(2)),LOG(EXP(2)),LOG10(10),LOG2(4)
+FROM DUAL;
+
+# 进制间的转换
+select bin(10),hex(10),oct(10),conv(10,10,8)
+from dual;
+
+2.字符串函数
+# utf-8编码一个中文等于三个字符
+SELECT ASCII('Abcdfsf'),CHAR_LENGTH('hello'),CHAR_LENGTH('我们'),LENGTH('hello'),LENGTH('我们')
+FROM DUAL;
+
+# xxx worked for yyy
+SELECT CONCAT(emp.last_name,' worked for ',mgr.last_name) as "details"
+FROM employees emp join employees mgr
+WHERE emp.`manager_id` = mgr.employee_id;
+
+SELECT CONCAT_WS('-','hello','world')
+from DUAL;
+# 字符串的索引是从1开始的！
+SELECT INSERT('hello',2,3,'world'),REPLACE('hello','ll','mm')
+
+SELECT UPPER('HeLlo'),LOWER('heLlO')
+
+SELECT last_name,salary
+from employees
+WHERE UPPER(last_name) = 'king';
+
+SELECT LEFT('hello',2),RIGHT('hello',3),RIGHT('hello',13)
+
+# LPAD:实现右对齐效果
+# RPAD:实现左对齐效果
+SELECT employee_id,last_name,LPAD(salary,10,' ')
+FROM employees;
+
+SELECT TRIM('   h e  llo    '),TRIM('o' FROM 'ooheollo')
+
+SELECT REPEAT('hello',3),LENGTH(SPACE(5)),STRCMP('abc','abe')
+
+SELECT SUBSTR('hello',2,2),LOCATE('ll','hello')
+
+SELECT ELT(2,'a','b','c'),FIELD('mm','gg','jj','mm'),
+FIND_IN_SET('mm','gg,mm,jj,dd,mm')
+
+SELECT employee_id,NULLIF(LENGTH(first_name),LENGTH(last_name))
+FROM employeesSELECT TRIM('   h e  llo    '),TRIM('o' FROM 'ooheollo')
+
+SELECT REPEAT('hello',3),LENGTH(SPACE(5)),STRCMP('abc','abe')
+
+SELECT SUBSTR('hello',2,2),LOCATE('ll','hello')
+
+SELECT ELT(2,'a','b','c'),FIELD('mm','gg','jj','mm'),
+FIND_IN_SET('mm','gg,mm,jj,dd,mm')
+
+SELECT employee_id,NULLIF(LENGTH(first_name),LENGTH(last_name))
+FROM employees
+
+3. 日期时间函数
+
+3.1 获取日期、时间
+。。。。
+3.2 日期与时间戳的转换
+。。。
+3.3 获取月份、星期、星期数、天数等函数
+。。。
+3.4 日期的操作函数
+。。。
+3.5 时间和秒钟转换的函数
+。。。
+3.6 计算日期和时间的函数
+。。。
+3.7 日期的格式化和解析
+格式化：日期 --> 字符串
+解析：字符串 --> 日期
+
+4.流程控制函数
+
+4.1 IF(VALUE,VALUE1,VALUE2)
+SELECT last_name,salary,IF(salary >= 6000,'高薪','底薪') 'details'
+FROM employees
+
+4.2 IFNULL(VALUE1,VALUE2):看做是IF(VALUE,VALUE1,VALUE2)的特殊情况
+SELECT last_name,commission_pct,IFNULL(commission_pct,0)
+FROM employees
+
+4.3 CASE WHEN ... THEN ... WHEN ... THEN ... ELSE ... END
+类似于Java的if ... else if ... else if ... else
+SELECT last_name,salary,CASE WHEN salary >= 15000 THEN '6'
+WHEN salary >= 10000 THEN '7'
+WHEN salary >= 8000 THEN 'nice'
+ELSE 'gg' END 'details'
+FROM employees
+
+4.4 CASE ... WHEN ... THEN ... WHEN ... THEN ... ELSE ... END
+SELECT employee_id,last_name,department_id,salary,CASE department_id WHEN 10 THEN salary *1.1
+WHEN 20 THEN salary * 1.2
+WHEN 30 then salary * 1.3
+END 'details'
+FROM employees
+WHERE department_id in (10,20,30);
+
+5.加密与解密的函数
+
+PASSWORD()、ENCODE()、DECODE() 在mysql8.0中弃用。
+SELECT MD5('mysql'),SHA('mysql');
+
+6.MySQL信息函数
+用于查看当前MySQL的版本、ID、用户、编码等。
+
+7.其他函数
+
+FORMAT(value,n)		返回对数字value进行格式化后的结果数据。n表示四舍五入后保留到小数点后n位
+CONV(value,from,to)		将value的值进行不同进制之间的转换
+INET_ATON(ipvalue)		将以点分隔的IP地址转化为一个数字
+INET_NTOA(value)		将数字形式的IP地址转化为以点分隔的IP地址
+BENCHMARK(n,expr)		将表达式expr重复执行n次。用于测试MySQL处理expr表达式所耗费的时间
+CONVERT(value USING char_code)		将value所使用的字符编码修改为char_code
+
+
+第八章 聚合函数
+
+1. 常见的几个聚合函数
+avg(),sum()只适用于数值类型的字段或变量
+max(),min()适用于数值类型、字符串类型、日期时间类型的字段或变量
+count()用于计算指定字段在查询结构中出现的个数(不包含空值)，如果字段为常数或*或主键，则返回表中的所有记录
+AVG = sum + count
+
+2. group by 的使用
+查询各个部门的平均工资、最高工资
+SELECT department_id,AVG(salary),MAX(salary)
+FROM employees
+GROUP BY department_id;
+
+错误演示：
+SELECT department_id,job_id,AVG(salary),MAX(salary)
+FROM employees
+GROUP BY department_id;
+结论：select中出现非组函数的字段必须声明在group by 中，反之，group by 中声明的字段可以不出现在select中。
+
+SELECT department_id,AVG(salary)
+FROM employees
+GROUP BY department_id with rollup;
+使用with rollup关键字后，会在所有分组记录之后再增加一条查询出所有记录的总和，即统计记录数量
+说明：当使用rollup时，不能同时使用order by 子句进行结果排序，即rollup和order by 是互相排斥的。
+
+3. having的使用（用来过滤数据的）
+查询各个部门中最高工资比10000高的部门信息
+SELECT department_id,MAX(salary) as m
+FROM employees
+GROUP BY department_id
+HAVING m > 10000;
+注意：如果过滤条件中使用了聚合函数，则必须使用having来替换where，否则报错
+	 having必须声明在group by 的后面
+	 在开发中，我们使用having的前提是SQL中使用了group by
+	 当过滤条件中没有使用聚合函数时，则此过滤条件声明在where或having中都可以，但是最好声明在where中，这样效率更高。
+
+where 与 having 的对比：
+	1. 从适用范围来说，having的适用范围更广；
+	2. 如果过滤条件中没有聚合函数：这种情况下，where的执行效率要高于having
+
+4. SQL底层执行原理
+
+4.1 SQL语句的完整结构
+
+SQL92语法：
+select ...,...,...(存在聚合函数)
+from ...,...,...
+where 多表的连接条件 and 不包含聚合函数的过滤条件
+group by ...,...
+having 包含聚合函数的过滤条件
+order by ...,...(asc/desc)
+limit ...,...
+
+SQL99语法：
+select ...,...,...(存在聚合函数)
+from ... (left / right) join ... on 多表的连接条件
+(left / right) join ... on ...
+where 不包含聚合函数的过滤条件
+group by ...,...
+having 包含聚合函数的过滤条件
+order by ...,...(asc/desc)
+limit ...,...
+
+4.2 SQL语句的执行过程
+from ...,... -> on -> (left / right) join -> where -> group by -> having -> select -> distinct -> 
+order by -> limit
+
+
+第九章 子查询
+
+用之前的知识查询谁的工资比Abel的高？
+方式一：
+SELECT salary
+FROM employees
+WHERE last_name = 'Abel';
+
+SELECT last_name,salary
+FROM employees
+WHERE salary > 11000;
+
+方式二：自连接
+SELECT e2.last_name,e2.salary
+FROM employees e1 , employees e2
+WHERE e1.last_name = 'Abel' AND e2.salary > e1.salary;
+
+1. 引入子查询：
+SELECT last_name,salary
+FROM employees
+WHERE salary > (
+		SELECT salary
+		FROM employees
+		WHERE last_name = 'Abel'
+);
+
+2. 称谓的规范：外查询（或主查询）、内查询（或子查询）
+注意：子查询在主查询之前一次执行完成
+	子查询的结果被主查询使用
+	子查询要包含在括号内
+	将子查询放在比较条件的右侧
+	单行操作符对应单行子查询，多行操作符对应多行子查询
+
+3. 子查询的分类
+角度1：从内查询返回结果的条目数
+		单行子查询  vs  多行子查询
+
+角度2：内查询是否被执行多次
+		相关子查询  vs  不相关子查询
+
+		相关：
+		SELECT a.last_name,a.salary
+		FROM employees a
+		WHERE a.salary > (
+			SELECT avg(salary)
+			FROM employees as b
+ 			WHERE b.department_id = a.department_id
+			GROUP BY b.department_id
+		);
+
+		不相关：
+		SELECT last_name,salary
+		FROM employees
+		WHERE salary > (
+		SELECT avg(salary)
+		FROM employees);
+
+4. 单行子查询
+	单行操作符：=	 != > >= < <=
+	例子:
+	SELECT employee_id,last_name,
+	IF(department_id = (SELECT department_id FROM departments WHERE location_id = 1800),'canada','usa')
+	FROM employees;
+
+5. 多行子查询
+	操作符:in any all some(同any)
+	例子：
+	any/all(任一，所有)
+		SELECT employee_id,last_name,job_id,salary
+		FROM employees
+		WHERE job_id <> 'IT_PROG'
+		AND salary < ANY/ALL (
+				SELECT salary
+				FROM employees
+				WHERE job_id = 'IT_PROG'
+		)
+	查询平均工资最低的部门id(MySQL中聚合函数是不能嵌套使用的)
+	SELECT department_id
+	FROM employees
+	GROUP BY department_id
+	HAVING avg(salary) = (
+			SELECT MIN(avg_sal)
+			FROM(
+					SELECT AVG(salary) avg_sal
+					FROM employees
+					GROUP BY department_id
+					) t_dept_avg_sal
+			)
+	空值问题：如果子查询中出现了null值，则整个查询都会返回null
+
+6.相关子查询
+	例子：
+	SELECT employee_id,salary
+	FROM employees e
+	ORDER BY (
+			SELECT department_name
+			FROM departments d
+			WHERE e.department_id = d.department_id)
+结论：在select中，除了group by 和 limit 之外，其他位置都可以声明子查询！
+
+exists和Not exists的使用：
+SELECT department_id,department_name
+FROM departments d
+WHERE NOT EXISTS (
+		SELECT *
+		FROM employees e
+		WHERE d.department_id = e.department_id
+);
+
+
+第10章 创建和管理表
+
+1. 创建和管理数据库
+
+1.1 如何创建数据库
+
+方式1:create database mytest;		# 创建的此数据库使用的是默认的字符集
+方式2:create database mytest character set 'gbk';		# 显式了指明了要创建的数据库字符集
+方式3（推荐）:create database if Not exists mytest character set 'gbk';		# 如果要创建的数据库已经存在，则创建不成功，但不会报错。
+
+show create database mytest		# 查看创建数据库的结构
+
+1.2 管理数据库
+
+show database;		# 查看当前连接中的数据库有哪些
+use mytest;		# 切换数据库
+show tables;	# 查看当前数据库中保存的数据表
+select database();		# 查看当前使用的数据库
+show tables from 指定数据库;		# 查看指定数据库下保存的数据表
+
+1.3 修改数据库
+
+alter database mytest character set 'utf-8';	# 更改数据库的字符集
+
+1.4 删除数据库
+
+方式1:drop database mytest;		# 如果要删除的数据库存在，则删除成功；如果不存在，则报错。
+方式2（推荐）:drop database if exists mytest;		# 如果要删除的数据库存在，则删除成功；如果不存在，则默默结束，不会报错。 
+
+2. 如何创建数据表
+
+方式1:“白手起家”的方式
+create table if not exists test(	# 需要用户具备创建表的权限
+		id int,
+		name varchar(10),	# 使用varchar来定义字符串，必须在使用varchar时指明其长度
+		birthday date
+	);
+查看表结构：
+desc test;
+查看创建表的语句结构：
+show create table test;		# 如果创建表时没有指明使用的字符集，则默认使用表所在的数据库的字符集。
+查看表数据：
+select * from test;
+
+方式2:基于现有的表，同时导入数据,且查询语句中字段的别名，可以作为新创建表的字段的名称
+create table test2 as select employee_id,last_name name,salary from employees;
+
+思考：怎么对一个表的字段进行复制，而不包括表数据？
+在查询语句的条件上写上不在范围内的数据，查询为空即可不包括表中数据。
+
+3. 修改表 --> alter table
+
+3.1 添加一个字段
+alter table test 字段 数据类型 (first(添加到第一个字段位置)/after(添加到指定字段之后));		# 默认添加到表中的最后一个字段的位置
+
+3.2 修改一个字段：数据类型、长度、默认值
+alter table test modify name varchar(20) default 'aaa';		# 一般不修改数据类型，只改其长度，默认值不设置默认为null
+
+3.3 重命名一个字段
+alter table test change name myname varchar(20);	# 中含modify操作
+
+3.4 删除一个字段
+alter table test drop column email;
+
+4. 重命名表
+方式1:rename table test to test1;
+方式2:alter table test rename to test1;
+
+5. 删除表
+不光将表结构删除掉，同时表中数据也删除掉，释放表空间
+drop table if exists test2;
+
+6. 清空表
+清空表中的所有数据，但是表结构保留
+truncate table test1;
+
+7. DCL 中 commit 和 rollback
+commit：提交数据。一旦执行commit，则数据就被永久保存在数据库中，意味着数据不可以回滚。
+rollback：回滚数据。一旦执行rollback，则可以实现数据的回滚。回滚到最近的一次commit之后。
+
+8. 对比 truncate table 和 delete from
+相同点：都可以实现对表中所有数据的删除，同时保留表结构。
+不同点：
+	truncate table：一旦执行此操作，表数据全部清除。同时数据不可以回滚。
+	delete from：一旦执行此操作，表数据可以全部清除（不带where）。同时数据可以实现回滚。
+
+9. DDL 和 DML 的说明
+	1)DDL的操作一旦执行就不可回滚。指令set autocommit = false对DDL操作失效。（DDL操作之后，自动执行了commit，且不受此命令影响）
+	2)DML的操作默认情况，一旦执行，也是不可回滚的。但是，如果在执行DML之前，执行了set autocommit = false，则执行的DML操作就可以实现回滚。
+
+
+第11章 数据处理之增删改
+
+1. 添加数据
+
+方式1:一条一条的添加数据
+	1) 没有指明添加的字段
+	注意：一定要按照声明的字段的先后顺序添加
+		insert into 表名
+		values (字段1的数据,字段2的数据,字段3的数据,...)
+	2) 指明要添加的字段（推荐）（对没有进行赋值的字段的值为null）
+		insert into 表名(字段1,字段2,字段3,...)
+		values (字段1的数据,字段2的数据,字段3的数据,...)
+	3) 同时插入多条记录（推荐）
+		insert into 表名(字段1,字段2,字段3,...)
+		values (字段1的数据,字段2的数据,字段3的数据,...),
+				(字段1的数据,字段2的数据,字段3的数据,...),
+				(字段1的数据,字段2的数据,字段3的数据,...);
+
+方式2:将查询结果插入到表中
+	insert into 表名1(字段1,字段2,字段3,...)
+	select 表中数据类型与上对应的字段 from 表名2 where 条件;
+	表1的字段长度不能低于表2的字段长度，否则会有添加不成功的风险。
+
+2. 更新数据（或修改数据）
+	update ... set ...,... where ...	# 可以实现批量数据的修改
+
+3. 删除数据
+	delete from ... where ...
+
+注意：在修改、删除数据时，是可能存在不成功的情况（可能是由于约束的影响造成的）
+
+小结：DML操作默认情况下，执行完以后都会自动提交数据。如果希望执行完以后不自动提交数据，则需要使用set autocommit = false。
+
+4. MySQL8的新特性：计算列
+
+create table test(
+a int,
+b int,
+c int generater always as (a + b) virtual		# 字段C即为计算列
+);
+insert into test(a+b) values(10,20);
+update test set a = 100;
+
+
+第12章 MySQL数据类型精讲
+
+1.关于属性：character set name 	# 指定一个字符集
+创建数据库时指明字符集：create database if not exists 数据库名 character set 'utf8'
+创建表时指明表的字符集：create table 表名(...) character set 'utf8'
+创建表指明表中的字段时，可以指定字段的字符集：create table 表名(字段1 数据类型 character set 'utf8')
+
+2.整型数据类型
+	create table table_name(
+	f int(M) zerofill	# 显示宽度为M,当insert值不足M位时，使用0往前填充；当使用zerofill时，会自动添加unsiged)
+	从MySQL8.0开始，整数数据类型不推荐使用显示宽度属性。
+
+3.浮点类型
+	float、double
+
+4.定点数类型
+	decimal(M,D)	# M被称为精度，D被称为报度
+
+注意：精度要求不高时，浮点数表达的数值范围更大，而定点数精度更高。
+
+5.位类型
+	bit
+
+6.日期与时间类型
+
+year类型，默认格式'YYYY'，范围(1901~2155)
+date类型，标准格式'YYYY-MM-DD'，范围(1000-01-01 ~ 9999-12-03)
+	使用current_date()或now()函数，会插入当前系统的日期。
+time类型，标准格式'HH:MM:SS'，可以超过24小时来表示时间间隔。
+	使用current_time()或now()函数，会插入当前系统的时间。
+datetime类型，标准格式'YYYY-MM-DD HH:MM:SS'，范围(1000-01-01 00:00:00 ~ 9999-12-03 23:59:59)
+	使用current_timestamp()或now()函数，会插入当前系统的日期、时间。
+timestamp类型，标准格式'YYYY-MM-DD HH:MM:SS'，范围(1970-01-01 00:00:01 UTC ~ 2038-01-19 03:14:07 UTC)
+
+7.文本字符串类型
+
+char类型，固定长度，不指明长度，默认1字符
+varchar类型，必须指定长度（此处长度是指字符），否则报错，注意：一个汉字占三个字符
+text类型，用来保存文本类型的字符串，但是由于实际存储的长度不确定，MySQL不允许text类型的字段做主键
+
+8.enum类型
+	也叫枚举类型，添加数据时只能添加枚举中的值，且忽略大小写，可以使用索引进行枚举元素的调用，没有限制非空的情况下，可以添加null值
+
+9.set类型
+	插入数据也只能从已有元素中获取，且插入重复数据时会自动删除重复的成员，插入set成员中不存在的值会抛出错误
+
+10.二进制字符串类型
+
+binary类型，固定长度的二进制字符串，不指定长度默认存储1字节，最多8字节
+varbinary类型，可变长度的二进制字符串
+blob类型，是一个二进制大对象，可容纳可变数量的数据，主要是用来存图片、音频、视频的
+
+11.JSON类型
+是客户端和服务器端进行数据交换的一种格式
+
+12.空间类型
+	有单值类型和集合类型
+
+
+第13章 约束
+
+constraint的用法：
+alter table 表名 add constraint 约束名称 约束类型 （列名）
+
+1. 基础知识
+1.1 为什么需要约束？ 为了保证数据的完整性！
+
+1.2 什么叫约束？ 对表中字段的限制作用。
+
+1.3 约束的分类：
+	角度1：约束的字段的个数
+	单列约束 VS 多列约束
+	角度2：约束的作用范围
+	列级约束：将此约束声明在对应字段的后面
+	表级约束：在表中所有字段都声明完，在所有字段的后面声明的约束
+	角度3：约束的作用（或功能）
+		非空约束：not null
+		唯一性约束：unique
+		主键约束：primary key
+		外键约束：foreign key
+		检查约束：check
+		默认值约束：default
+
+1.4 如何添加、删除约束？
+	create table时添加约束
+	alter table时增加、删除约束
+
+2. 如何查看表中的约束
+select * from information_schema.table_constraints where table_name = '表名称'
+
+3. 非空约束：not null（没有表级约束的写法）
+3.1 在create table时添加约束
+直接在数据类型之后添加，此后在插入数据时，标明为非空的字段不得为空
+
+3.2 在alter table时添加非空约束
+alter table test1
+modify 字段名 数据类型 not null
+
+3.3 在alter table时删除非空约束
+alter table test1
+modify 字段名 数据类型 null
+
+4. 唯一性约束：unique
+4.1 在create table时添加约束
+可以在数据类型之后添加列级约束，也可以在所有字段声明后添加表级约束
+
+注意：
+	在创建唯一约束的时候，如果不给唯一约束命名，就默认和列名相同，给约束命名是为了后续删除约束的便利。
+	可以向声明为unique的字段上添加null值，而且可以多次添加null
+
+4.2 在alter table时添加唯一性约束
+方式1：alter table 表名 add unique key（字段列表）
+方式2：alter table 表名 modify 字段名 类型 unique
+
+4.3 复合的唯一性约束
+	create table user(
+	id int,
+	name varchar(15),
+	password varchar(25),
+	# 表级约束
+	constraint uk_user_name_pwd unique(name,password)
+	)
+	在对其进行插入时，只要保证name 和 password 其中一个不相同即可。
+
+4.4 删除唯一性约束
+添加唯一性约束的列上也会自动创建唯一索引
+删除唯一性约束只能通过删除唯一索引的方式删除
+删除时需要指定唯一索引名，唯一索引名就和唯一约束名一样
+如果创建唯一约束时未指定名称，如果时单列，就默认与列名相同；如果是组合列，那么默认和()中排在第一个的列名相同。也可以自定义唯一性约束名。
+
+如何删除唯一性索引：
+	alter table 表名 drop index 唯一性约束名
+
+5. 主键约束：primary key
+5.1 在create table时添加约束
+可以在数据类型之后添加列级约束，也可以在所有字段声明后添加表级约束
+注意：	
+	一个表中最多只有一个主键约束
+	主键约束特征：非空且唯一，用于唯一的标识表中的一条记录
+	MySQL中主键名总是是primary，即使命名了也不会改变
+
+5.2 在alter table时添加主键约束
+alter table 表名 add primary key （字段名）
+
+5.3 如何删除主键约束
+alter table 表名 drop primary key
+
+6. 自增长列：auto_increment
+6.1 在create table时添加
+该列只能存在于非空字段，且声明在约束之后
+注意：
+	开发中，一旦主键作用的字段上声明了auto_increment，则我们在添加数据时，就不要给主键对应的字段去赋值了；
+	我们向主键（含auto_increment）的字段添加0或null时，实际上会自动的往上添加指定的字段的数值。
+
+6.2 在alter table时添加
+alter table 表名 modify 字段名 数据类型 auto_increment
+
+6.3 在alter table 时删除
+alter table 表名 modify 字段名 数据类型
+
+6.4 MySQL8.0新特性-自增变量的持久化
+在MySQL5.7中，自增主键的计数器是在内存中维护，不会持久化到磁盘，当数据库重启，该计数器被初始化
+在MySQL8.0中，将自增主键的计数器持久化到了重做日志中，数据库重启，它会根据日志的信息来初始化计数器的内存值
+
+7. 外键约束：foreign key
+7.1 在create table时添加外键约束
+	主表和从表（父表和子表）：先创建主表，在创建从表
+	用法：constraint 约束名 foreign key （从表其中一关联字段） references 主表（主键）
+
+7.2 在alter table使添加外键约束
+alter table 表名 add constraint 约束名 foreign key （从表其中一关联字段） references 主表（主键）
+
+7.3 约束等级
+Cascade方式 ：在父表上update/delete记录时，同步update/delete掉子表的匹配记录
+Set null方式 ：在父表上update/delete记录时，将子表上匹配记录的列设为null，但是要注意子表的外键列不能为not null
+No action方式 ：如果子表中有匹配的记录，则不允许对父表对应候选键进行update/delete操作
+Restrict方式 ：同no action， 都是立即检查外键约束
+Set default方式 （在可视化工具SQLyog中可能显示空白）：父表有变更时，子表将外键列设置成一个默认的值，但Innodb不能识别
+注意：对外键约束，最好是采用:on update cascade on delete restrict的方式
+
+7.4 删除外键约束
+一个表中可以声明有多个外键约束
+先删除外键约束alter table 表名 drop foreign key 外键约束名，再手动删除外键约束对应的普通索引alter table 表名 drop index 外键约束名
+
+8. 检查约束：check
+注意：5.7不支持，8.0支持
+
+9. default约束
+9.1 在create table时添加约束
+可以在数据类型之后添加列级约束，也可以在所有字段声明后添加表级约束
+
+9.2 在alter table添加约束
+alter table 表名 modify 字段名 数据类型 default 默认值
+
+9.3 在alter table 时删除
+alter table 表名 modify 字段名 数据类型
+
+面试题：
+1.为什么建表时，加not null default 或 default 0
+	不想让表中出现null值
+2.为什么不想要null值
+	不好比较，效率不高
+3.带auto_increment约束的字段值是从1开始的嘛
+	默认初始值是1，每增加一条记录，字段值自动加1，也可以指定自增字段的值，然后在此基础上自增
+4.并不是每个表都可以任意选择存储引擎？
+	外键约束不能跨引擎使用
+
+
+第14章 视图（view）
+
+1.视图的理解
+	视图，可以看做一个虚拟表，本身是不存储数据的，视图的本质，就可以看做是存储起来的select语句
+	视图中select语句中涉及的表，称为基表
+	针对视图做DML操作，会影响到对应的基表中的数据，反之亦然
+	视图本身的删除，不会导致基表中数据的删除
+	视图的应用场景：针对小项目，不推荐使用视图；针对大型项目，可以考虑使用视图
+	视图的优点：简化查询；控制数据的访问
+
+2. 如何创建视图
+2.1针对于单表：
+create view 视图名 as 查询语句(查询语句中字段的别名会作为视图中字段的名称出现)
+或create view 视图名(对应表中字段名)  as 查询语句(此时视图中出现的字段名为括号中的字段名，且查询语句中的字段要一一匹配)
+
+2.2 针对于多表
+create view 视图名 as 多表查询语句(如果有表连接关系，这就是不可更新视图)
+可以通过concat连接实现视图对数据进行格式化
+
+2.3 基于视图创建视图
+即查询语句中的表、字段都为视图中的表、字段
+
+3. 查看视图
+语法1：查看数据库的表对象、视图对象	
+	show tables;
+语法2：查看视图的结构
+	describe 视图名;
+语法3：查看视图的属性信息
+	show table Status like '视图名';
+语法4：查看视图的详细定义信息
+	show create view 视图名;
+
+4. “更新”视图中的数据
+4.1 一般情况可以更新视图的数据
+update 视图名 set ...
+注意：更新、删除视图的数据，会导致基表中数据的修改，反之亦然
+
+4.2 不能更新视图中的数据
+对应的基表中没有此字段，或使用了聚合函数等等情况
+
+5. 修改视图
+方式1：create or replace view 视图名 as 查询语句
+方式2：alter view 视图名 as 查询语句
+
+6. 删除视图
+drop view (if exists) 视图名
+
+
+第15章 存储过程与存储函数
+
+1. 创建、调用存储过程
+	创建存储过程：
+	delimiter $
+	create procedure 存储过程名(in/out/inout 变量 数据类型)(例如avg_emp_sal(out ms double))
+	begin
+		查询语句
+	end $
+	delimiter ;
+
+	存储过程的调用：
+	call 存储过程名(变量/具体字段/_)(例如avg_emp_sal(@ms))
+	查看变量值：select @ms
+
+2. 创建、调用存储函数
+创建函数前执行此语句，保证函数的创建会成功
+set global log_bin_trust_function_creators = 1;
+	创建存储函数：
+	delimiter //
+	create function 函数名(参数名 参数类型)
+	returns 返回值类型
+	(characteristic)
+	begin
+		函数体（return(查询语句)）
+	end
+	delimiter ;
+
+	调用存储函数：
+	select 函数名()
+
+3. 存储过程、存储函数的查看
+
+3.1 使用show create语句查看存储过程和函数的创建信息
+show create procedure 存储过程名
+show create function 函数名
+
+3.2 使用show status语句查看存储过程和函数的状态信息
+show procedure/function status;		查看所有信息
+show procedure/function status like '存储过程名/函数名';
+
+3.3 从information_schema.Routines表中查看存储过程和函数的信息
+select * from information_schema.Routines
+where ROUTINE_NAME='存储过程名或函数名'  and ROUTINE_TYPE='procedure/function';
+
+4. 存储过程、存储函数的修改
+alter procedure/function 存储过程名或函数名 characteristic ...
+
+5. 存储过程、存储函数的删除
+drop procedure/function if exists 存储过程名或函数名
+
+
+第16章 变量、流程控制与游标
+
+1. 变量
+1.1 变量：系统变量（全局系统变量、会话系统变量） VS 用户自定义变量
+
+1.2 查看系统变量
+show global variables;		# 查询所有全局
+show session variables;		# 查询所有会话
+show variables;		# 默认查询会话系统变量
+show global variables like '';		# 查询部分全局
+show session variables like '';		# 查询部分会话
+
+1.3 查看指定系统变量
+有些系统变量只能是全局的或会话的，有些既可以是全局也可以是会话
+select @@global.character_set_client
+select @@session.character_set_client
+select @@系统变量名；		# 会先查询会话系统变量，再查询全局系统变量
+
+1.4 修改系统变量的值
+方式1：set @@global(或session).变量名 = 变量值
+方式2：set global(或session) 变量名 = 变量值
+
+注意：对全局系统变量，这些修改只针对于当前数据库实例有效，一旦重启mysql服务，就失效了；对会话系统变量，只对当前会话有效，更改会话就会失效。
+
+1.5 用户变量
+① 用户变量：会话用户变量 VS 局部变量
+② 会话用户变量：使用@开头，作用域为当前会话
+③ 局部变量：只能使用在存储过程和存储函数中的
+
+1.6 会话用户变量
+① 变量的声明和赋值
+	方式1：set @用户变量 =(或:=) 值
+	方式2：select 用户变量 := 表达式 [from 等子句]
+			select 表达式 into @用户变量 [from 等子句]
+② 使用
+select @变量名
+
+1.7 局部变量
+	1. 局部变量必须满足：使用declare声明；声明并使用在begin ... end中（使用在存储过程、函数中）；declare的方式声明的局部变量必须声明在begin中的首行的位置
+	2. 声明格式：
+		declare 变量名 类型 [default 值];		# 如果没有default子句，初始值为null
+	3. 赋值
+	方式1：set 变量名 =(或:=) 值
+	方式2：select 字段名或表达式 into 变量名 from 表
+	4. 使用
+	select 局部变量名
+
+2. 定义条件和处理程序
+
+3. 流程控制
+
+3.1 分支结构之 if 
+语法结构：
+	if 表达式1 then 操作1
+	elseif 表达式2 then 操作2
+	else 操作N
+	end if
+
+3.2 分支结构之 case 
+语法结构1：
+	case 表达式
+	when 值1 then 结果1或语句1（如果是语句，还需要加分号）
+	when 值2 then 结果2或语句2（如果是语句，还需要加分号）
+	...
+	else 结果n或语句n
+	end [case](如果该结构位于begin end中就加)
+语法结构2：
+	case 
+	when 条件1 then 结果1或语句1（如果是语句，还需要加分号）
+	when 条件2 then 结果2或语句2（如果是语句，还需要加分号）
+	...
+	else 结果n或语句n
+	end [case](如果该结构位于begin end中就加)
+
+凡是循环结构，一定具备4要素：初始化条件、循环条件、循环体、迭代条件
+4.1 循环结构之loop
+语法结构：
+	loop_label:loop
+	循环执行的语句（要退出时使用leave loop_label即可）
+	end loop loop_label;
+
+4.2 循环结构值while
+语法结构：
+	[while_label]:while 循环条件 do
+	循环体
+	end while [while_label]
+
+4.3 循环结构之repeat
+语法结构：
+	[repeat_label]:repeat
+	循环体的语句
+	utill 结束循环的条件表达式
+	end repeat [repeat_label]
+
+5.1 leave的使用
+语法格式：leave label
+
+5.2 iterate的使用
+语法格式：iterate label
+
+6. 游标的使用
+步骤：
+① 声明游标：declare 游标名 cursor for(is) 查询语句
+② 打开游标：open 游标名
+③ 使用游标（从游标中获取数据）：fetch 游标名 into 变量名
+④ 关闭游标：close 游标名
+
+
+第17章 触发器
+
+1. 创建触发器
+语法结构：
+	(delimiter //)
+	create trigger 触发器名
+	before/after insert/update/delete on 表名
+	for each row
+	(begin)
+	触发器执行的语句块;
+	(end //)
+	(delimiter ;)
+举例：定义触发器“salary_check_trigger”，基于员工表“employees”的INSERT事件，在INSERT之前检查将要添加的新员工薪资是否大于他领导的薪资，如果大于领导薪资，则报sqlstate_value为'HY000'的错误，从而使得添加失败。
+	DELIMITER //
+	CREATE TRIGGER salary_check_trigger
+	BEFORE INSERT ON employees FOR EACH ROW
+	BEGIN
+		DECLARE mgrsalary DOUBLE;
+		SELECT salary INTO mgrsalary FROM employees WHERE employee_id = NEW.manager_id;
+		IF NEW.salary > mgrsalary THEN
+			SIGNAL SQLSTATE 'HY000' SET MESSAGE_TEXT = '薪资高于领导薪资错误';
+		END IF;
+	END //
+	DELIMITER ;
+上面触发器声明过程中的new关键字代表insert添加语句的新纪录
+
+2. 查看触发器
+方式1：查看当前数据库的所有触发器的定义
+	show triggers\G(或;)
+方式2：查看当前数据库中某个触发器的定义
+	show create trigger 触发器名;
+方式3：从系统库information_schema的TRIGGERS表中查询“salary_check_trigger”触发器的信息。
+	SELECT * FROM information_schema.TRIGGERS;
+
+3. 删除触发器
+drop trigger if exists 触发器名;
+
+
+第18章 MySQL8的其他新特性
+
+一、窗口函数
+1. 窗口函数
+使用窗口函数前后对比：见尚硅谷MySQL教程MySQL8新特性一节
+
+2. 介绍窗口函数
+窗口函数的作用类似于在查询中对数据进行分组，不同的是，分组操作会把分组的结果聚合成一条记录，而窗口函数是将结果置于每一条数据记录中。
+窗口函数可以分为 静态窗口函数 和 动态窗口函数 。
+	静态窗口函数的窗口大小是固定的，不会因为记录的不同而不同；
+	动态窗口函数的窗口大小会随着记录的不同而变化。
+
+3. 窗口函数的语法结构和说明
+语法结构：
+	函数 over ([partition by 字段名 order by 字段名 asc/desc])
+	或是：
+	函数 over 窗口名 ... window 窗口名 as ([partition by 字段名 order by 字段名 asc/desc])
+说明：
+	OVER 关键字指定函数窗口的范围。
+		如果省略后面括号中的内容，则窗口会包含满足WHERE条件的所有记录，窗口函数会基于所有满足WHERE条件的记录进行计算。
+		如果OVER关键字后面的括号不为空，则可以使用如下语法设置窗口。
+	窗口名：为窗口设置一个别名，用来标识窗口。
+	PARTITION BY子句：指定窗口函数按照哪些字段进行分组。分组后，窗口函数可以在每个分组中分别执行。
+	ORDER BY子句：指定窗口函数按照哪些字段进行排序。执行排序操作使窗口函数按照排序后的数据记录的顺序进行编号。
+	FRAME子句：为分区中的某个子集定义规则，可以用来作为滑动窗口使用。
+
+4. 窗口函数的分类
+4.1 序号函数
+	row_number()函数
+	举例：查询 goods 数据表中每个商品分类下价格降序排列的各个商品信息
+		ELECT ROW_NUMBER() OVER(PARTITION BY category_id ORDER BY price DESC)
+		AS row_num,id, category_id, category, NAME, price, stock FROM goods;
+	rank()函数
+	举例：使用RANK()函数获取 goods 数据表中各类别的价格从高到低排序的各商品信息
+		ELECT RANK() OVER(PARTITION BY category_id ORDER BY price DESC)
+		AS row_num,id, category_id, category, NAME, price, stock FROM goods;
+	DENSE_RANK()函数
+	举例：使用DENSE_RANK()函数获取 goods 数据表中各类别的价格从高到低排序的各商品信息
+		SELECT DENSE_RANK() OVER(PARTITION BY category_id ORDER BY price DESC)
+		AS row_num,id, category_id, category, NAME, price, stock FROM goods;
+
+4.2 分布函数
+	PERCENT_RANK()函数
+	举例：计算 goods 数据表中名称为“女装/女士精品”的类别下的商品的PERCENT_RANK值
+		写法一：
+		SELECT RANK() OVER (PARTITION BY category_id ORDER BY price DESC) AS r,
+		PERCENT_RANK() OVER (PARTITION BY category_id ORDER BY price DESC) AS pr,
+		id, category_id, category, NAME, price, stock
+		FROM goods
+		WHERE category_id = 1;
+		写法二：
+		SELECT RANK() OVER w AS r,
+		PERCENT_RANK() OVER w AS pr,
+		id, category_id, category, NAME, price, stock
+		FROM goods
+		WHERE category_id = 1 WINDOW w AS (PARTITION BY category_id ORDER BY price DESC);
+	CUME_DIST()函数
+	举例：查询goods数据表中小于或等于当前价格的比例
+		ELECT CUME_DIST() OVER(PARTITION BY category_id ORDER BY price ASC)
+		AS cd,id, category, NAME, price FROM goods;
+
+4.3 前后函数
+	LAG(expr,n)函数
+	举例：查询goods数据表中前一个商品价格与当前商品价格的差值
+		SELECT id, category, NAME, price, pre_price, price - pre_price AS diff_price
+		FROM (
+			SELECT id, category, NAME, price,LAG(price,1) OVER w AS pre_price
+			FROM goods
+			WINDOW w AS (PARTITION BY category_id ORDER BY price)
+		) t;
+	LEAD(expr,n)函数
+	举例：查询goods数据表中后一个商品价格与当前商品价格的差值
+		SELECT id, category, NAME, behind_price, price,behind_price - price AS diff_price
+		FROM(
+			SELECT id, category, NAME, price,LEAD(price, 1) OVER w AS behind_price
+			FROM goods WINDOW w AS (PARTITION BY category_id ORDER BY price)
+		) t;
+
+4.4 首尾函数
+	FIRST_VALUE(expr)函数
+	举例：按照价格排序，查询第1个商品的价格信息
+		SELECT id, category, NAME, price, stock,FIRST_VALUE(price) OVER w 
+		AS first_price FROM goods WINDOW w AS (PARTITION BY category_id ORDER BY price);
+	LAST_VALUE(expr)函数
+	举例：按照价格排序，查询最后一个商品的价格信息
+		SELECT id, category, NAME, price, stock,LAST_VALUE(price) OVER w AS last_price
+		FROM goods WINDOW w AS (PARTITION BY category_id ORDER BY price);
+
+4.5 其他函数
+	NTH_VALUE(expr,n)函数
+	举例：查询goods数据表中排名第2和第3的价格信息
+		SELECT id, category, NAME, price,NTH_VALUE(price,2) OVER w AS second_price,
+		NTH_VALUE(price,3) OVER w AS third_price
+		FROM goods WINDOW w AS (PARTITION BY category_id ORDER BY price);
+	NTILE(n)函数
+	举例：将goods表中的商品按照价格分为3组
+		SELECT NTILE(3) OVER w AS nt,id, category, NAME, price
+		FROM goods WINDOW w AS (PARTITION BY category_id ORDER BY price);
+
+二、公用表表达式
+1. 普通公用表表达式语法结构：
+	with CTE名称 as (子查询)
+	select/delete/update 语句;
+	举例：查询员工所在的部门的详细信息
+		WITH emp_dept_id AS (SELECT DISTINCT department_id FROM employees)
+		SELECT * FROM departments d JOIN emp_dept_id e ON d.department_id = e.department_id;
+
+2. 递归公用表表达式语法结构：
+	with recursive CTE名称 as (子查询) 
+	select/delete/update 语句;
+	举例：列出所有具有下下属身份的人员信息
+		WITH RECURSIVE cte
+		AS
+		(
+		SELECT employee_id,last_name,manager_id,1 AS n FROM employees WHERE employee_id = 100
+		-- 种子查询，找到第一代领导
+		UNION ALL
+		SELECT a.employee_id,a.last_name,a.manager_id,n+1 FROM employees AS a JOIN cte
+		ON (a.manager_id = cte.employee_id) -- 递归查询，找出以递归公用表表达式的人为领导的人
+		)
+		SELECT employee_id,last_name FROM cte WHERE n >= 3;

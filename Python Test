@@ -1,0 +1,57 @@
+'''
+#print("hello python")
+
+print('--------员工管理系统--------')
+choice = input('请选择要进行的操作：\n 1.添加员工\n 2.删除员工\n 3.查询原工\n 4.修改员工信息\n')
+if choice == '1':
+	print('添加员工')
+elif choice == '2':
+	print('删除员工')
+elif choice == '3':
+	print('查询原工')
+elif choice == '4':
+	print('修改员工信息')
+else:
+	print('输入错误！')
+'''
+
+'''
+def login(n):
+	i = 0
+	while i<n:
+		username = input('用户名：')
+		password = input('密码：')
+		if username =='admin' and password == '1234':
+			print('登录成功！')
+			break
+		else:
+			print('登录失败！请重新输入')
+			i += 1
+	else:
+		print('账户被锁定')
+login(2)
+'''
+
+'''
+def get_sum(n):
+	total = 0
+	for i in range(n+1):
+		total += i
+	print(total)
+
+get_sum(100)
+'''
+
+def decorater(func):
+		print('---------->1')
+		def wrapper():
+			func()
+			print('精装修')
+		print('---------->2')
+		return wrapper
+
+@decorater
+def house():
+	print('毛坯房....')
+
+house()
